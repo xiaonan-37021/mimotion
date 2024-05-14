@@ -186,3 +186,95 @@
   北京时间: '37 9,12,15,18,20,22 * * *'
   next exec time: UTC(14:37) 北京时间(22:37)
   ```
+
+  ### 刷步数脚本解析
+```yaml
+name: 刷步数
+
+on:
+  schedule:
+    - cron: '57 2,4,8,10,12,13 * * *'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout codes
+        uses: actions/checkout@v3
+      - name: Update system and install zsh
+        run: |
+          sudo -E apt-get -qq update
+          sudo -E apt-get install zsh -y
+          
+      - name: 初始化Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: 3.8
+          
+      - name: 开始
+        env:
+            CONFIG: ${{ secrets.CONFIG }}
+        run: |
+          pip3 install requests pytz
+          python3 main.py
+  ```
+
+
+#### 解析：
+这个 GitHub Actions 的工作流程配置文件定义了一个自动化任务，用于在预设的时间执行一系列操作。下面是对该配置文件的详解：
+
+### 工作流名称
+```yaml
+name: 刷步数
+```
+这里定义了工作流的名称为“刷步数”。
+
+### 触发条件
+```yaml
+on:
+  schedule:
+    - cron: '57 2,4,8,10,12,13 * * *'
+  workflow_dispatch:
+```
+这部分定义了工作流的触发条件：
+
+- **schedule**：使用 cron 格式设定自动触发的时间。此处的 `'57 2,4,8,10,12,13 * * *'` 表示在 UTC 时间每天的 2:57、4:57、8:57、10:57、12:57 和 13:57 分别执行一次。
+- **workflow_dispatch**：允许手动触发此工作流。在 GitHub 仓库的 Actions 页面上会显示一个按钮，可以手动启动这个工作流。
+
+### 工作内容
+```yaml
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout codes
+        uses: actions/checkout@v3
+      - name: Update system and install zsh
+        run: |
+          sudo -E apt-get -qq update
+          sudo -E apt-get install zsh -y
+      - name: 初始化Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: 3.8
+      - name: 开始
+        env:
+            CONFIG: ${{ secrets.CONFIG }}
+        run: |
+          pip3 install requests pytz
+          python3 main.py
+```
+这部分定义了名为 `build` 的工作：
+
+- **runs-on**: 指定工作流运行在哪种环境上，这里是使用最新版本的 Ubuntu。
+- **timeout-minutes**: 设置超时时间为 60 分钟，如果超过这个时间工作流还未完成，则会被自动取消。
+- **steps**: 定义一系列的步骤来执行任务：
+  - **Checkout codes**: 使用 `actions/checkout@v3` 操作来检出仓库代码。
+  - **Update system and install zsh**: 更新系统包并安装 zsh。
+  - **初始化Python**: 使用 `actions/setup-python@v3` 设置 Python 环境，指定版本为 3.8。
+  - **开始**: 设置环境变量 `CONFIG`，从仓库的 secrets 获取配置，并运行 Python 脚本。首先安装 `requests` 和 `pytz` 两个 Python 包，然后执行 `main.py` 脚本。
+
+这个工作流的主要目的是定时执行 `main.py` 脚本，可能用于自动化一些任务，如更新数据、自动化测试或其他定时任务。
